@@ -4,12 +4,12 @@ import cats.MonadError
 import cats.implicits._
 import cats.data.{NonEmptyList}
 
-trait ParserValidation extends Throwable
-case object EmptyLine extends ParserValidation
-case class ParserCastError(e: Throwable) extends ParserValidation
+trait ParserError extends Throwable
+case object ParserEmptyLine extends ParserError
+case class ParserCastError(e: Throwable) extends ParserError
 
 trait Parser[T, F[_]] {
-  implicit val F: MonadError[F, ParserValidation]
+  implicit val F: MonadError[F, ParserError]
 
   def cast(str: String): F[T]
 
@@ -21,13 +21,13 @@ trait Parser[T, F[_]] {
       .flatMap { list =>
         NonEmptyList
           .fromList(list)
-          .fold(F.raiseError[NonEmptyList[T]](EmptyLine))(_.pure[F])
+          .fold(F.raiseError[NonEmptyList[T]](ParserEmptyLine))(_.pure[F])
       }
   }
 
 }
 
-class IntParser[F[_]]()(implicit val F: MonadError[F, ParserValidation])
+class IntParser[F[_]]()(implicit val F: MonadError[F, ParserError])
     extends Parser[Int, F] {
 
   override def cast(str: String): F[Int] = {

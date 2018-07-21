@@ -1,26 +1,30 @@
 package com.github.plippe.suprnation
 
+import cats.ApplicativeError
+import cats.data.NonEmptyList
 import cats.implicits._
-import cats.data.{NonEmptyList, Validated}
 
 trait CombinerValidation extends Throwable
 case class NonCombinable[T](lists: NonEmptyList[NonEmptyList[T]],
                             elements: NonEmptyList[T])
     extends CombinerValidation
 
-trait Combiner[T] {
-  type Result[A] = Validated[CombinerValidation, A]
-
+trait Combiner[T, F[_]] {
   def prepend(lists: NonEmptyList[NonEmptyList[T]],
-              elements: NonEmptyList[T]): Result[NonEmptyList[NonEmptyList[T]]]
+              elements: NonEmptyList[T]): F[NonEmptyList[NonEmptyList[T]]]
 }
 
-class TreeCombiner[T] extends Combiner[T] {
+class TreeCombiner[T, F[_]]()(
+    implicit val F: ApplicativeError[F, CombinerValidation])
+    extends Combiner[T, F] {
+
   override def prepend(
       lists: NonEmptyList[NonEmptyList[T]],
-      elements: NonEmptyList[T]): Result[NonEmptyList[NonEmptyList[T]]] = {
-    if (lists.size + 1 != elements.size) NonCombinable(lists, elements).invalid
-    else {
+      elements: NonEmptyList[T]): F[NonEmptyList[NonEmptyList[T]]] = {
+
+    if (lists.size + 1 != elements.size) {
+      F.raiseError(NonCombinable(lists, elements))
+    } else {
       val leftRightElements = elements.toList
         .sliding(2)
         .toList
@@ -33,12 +37,14 @@ class TreeCombiner[T] extends Combiner[T] {
         .flatMap {
           case (list, (left, right)) =>
             List(
-              left :: list,
-              right :: list
+              list.prepend(left),
+              list.prepend(right),
             )
         }
 
-      NonEmptyList.fromListUnsafe(prependedLists).valid
+      NonEmptyList.fromListUnsafe(prependedLists).pure[F]
     }
+
   }
+
 }

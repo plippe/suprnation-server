@@ -6,6 +6,8 @@ import utest._
 
 object ParserTests extends TestSuite {
 
+  type F[T] = Either[ParserValidation, T]
+
   val tests = Tests {
     "parser" - {
       "parse casted" - { parseCasted() }
@@ -18,37 +20,41 @@ object ParserTests extends TestSuite {
   }
 
   def parseCasted() = {
-    val parser = new Parser[Int] {
-      def cast(str: String) = 0.valid[ParserValidation]
+    val parser = new Parser[Int, F] {
+      implicit val F =
+        cats.instances.either.catsStdInstancesForEither[ParserValidation]
+      def cast(str: String) = Right(0)
     }
 
     val result = parser.parse("1 2 3")
-    assert(result.isValid)
-    assert(result.exists(_ == NonEmptyList.of(Node(0), Node(0), Node(0))))
+    assert(result.isRight)
+    assert(result.exists(_ == NonEmptyList.of(0, 0, 0)))
   }
 
   def parseFailedCast() = {
     case object MyParserValidation extends ParserValidation
-    val parser = new Parser[Int] {
-      def cast(str: String) = MyParserValidation.invalid
+    val parser = new Parser[Int, F] {
+      implicit val F =
+        cats.instances.either.catsStdInstancesForEither[ParserValidation]
+      def cast(str: String) = Left(MyParserValidation)
     }
 
     val result = parser.parse("1 2 3")
-    assert(result.isInvalid)
+    assert(result.isLeft)
     assert(result.swap.exists(_ == MyParserValidation))
   }
 
   def castInt() = {
-    val parser = new IntParser()
+    val parser = new IntParser[F]()
     val result = parser.parse("1 2 3")
-    assert(result.isValid)
-    assert(result.exists(_ == NonEmptyList.of(Node(1), Node(2), Node(3))))
+    assert(result.isRight)
+    assert(result.exists(_ == NonEmptyList.of(1, 2, 3)))
   }
 
   def castFail() = {
-    val parser = new IntParser()
+    val parser = new IntParser[F]()
     val result = parser.parse("1 2 x")
-    assert(result.isInvalid)
+    assert(result.isLeft)
     assert(result.swap.exists(_.isInstanceOf[ParserCastError]))
   }
 

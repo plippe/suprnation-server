@@ -9,4 +9,8 @@ Open Book Coding Exercise for [SuprNation](http://suprnation.io/).
 ```sh
 # if sbt is installed
 cat resources/data.txt | make run
+
+# if docker is installed
+make docker-build
+cat resources/data.txt | make docker-run
 ```

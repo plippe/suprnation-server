@@ -50,8 +50,8 @@ object CombinerTests extends TestSuite {
 
   def combineWrongLists() = {
     val combiner = new TreeCombiner[Int, F]()
-    val lists = List.empty
-    val nodes = NonEmptyList.of(Node(1, 0), Node(2, 0))
+    val lists = List(NonEmptyList.of(Node(1, 0)))
+    val nodes = NonEmptyList.of(Node(1, 0), Node(2, 0), Node(3, 0))
 
     val result = combiner.prepend(lists, nodes)
     assert(result.isLeft)

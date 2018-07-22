@@ -8,7 +8,11 @@ trait Reader[F[_]] {
 
 class StandardInputReader[F[_]]()(implicit F: Sync[F]) extends Reader[F] {
   def readLine(): F[Option[String]] = F.delay {
-    val line = scala.io.StdIn.readLine()
-    Option(line) // The string read from the terminal or null if the end of stream was reached.
+    scala.io.StdIn.readLine() match {
+      case null =>
+        None // The string read from the terminal or null if the end of stream was reached.
+      case ""   => None
+      case line => Some(line)
+    }
   }
 }

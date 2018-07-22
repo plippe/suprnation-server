@@ -18,39 +18,40 @@ object CombinerTests extends TestSuite {
 
   def combine() = {
     val combiner = new TreeCombiner[Int, F]()
-    val lists = List(NonEmptyList.of(2, 1), NonEmptyList.of(8, 9))
-    val nodes = NonEmptyList.of(3, 5, 7)
+    val lists =
+      List(NonEmptyList.of(Node(2, 0), Node(1, 0)),
+           NonEmptyList.of(Node(8, 1), Node(9, 1)))
+    val nodes = NonEmptyList.of(Node(3, 0), Node(5, 1), Node(7, 2))
 
     val result = combiner.prepend(lists, nodes)
     assert(result.isRight)
     assert(
-      result.exists(
-        _ == NonEmptyList.of(
-          NonEmptyList.of(3, 2, 1),
-          NonEmptyList.of(5, 2, 1),
-          NonEmptyList.of(5, 8, 9),
-          NonEmptyList.of(7, 8, 9),
-        )))
+      result.exists(_ == NonEmptyList.of(
+        NonEmptyList.of(Node(3, 0), Node(2, 0), Node(1, 0)),
+        NonEmptyList.of(Node(5, 1), Node(2, 0), Node(1, 0)),
+        NonEmptyList.of(Node(5, 1), Node(8, 1), Node(9, 1)),
+        NonEmptyList.of(Node(7, 2), Node(8, 1), Node(9, 1)),
+      )))
   }
 
   def combineEmpty() = {
     val combiner = new TreeCombiner[Int, F]()
     val lists = List.empty
-    val nodes = NonEmptyList.of(1)
+    val nodes = NonEmptyList.of(Node(1, 0))
 
     val result = combiner.prepend(lists, nodes)
     assert(result.isRight)
     assert(
       result.exists(
         _ == NonEmptyList.of(
-          NonEmptyList.of(1),
+          NonEmptyList.of(Node(1, 0))
         )))
   }
 
   def combineWrongLists() = {
     val combiner = new TreeCombiner[Int, F]()
     val lists = List.empty
-    val nodes = NonEmptyList.of(1, 2)
+    val nodes = NonEmptyList.of(Node(1, 0), Node(2, 0))
 
     val result = combiner.prepend(lists, nodes)
     assert(result.isLeft)

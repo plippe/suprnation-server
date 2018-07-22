@@ -13,7 +13,7 @@ trait Parser[T, F[_]] {
 
   def cast(str: String): F[T]
 
-  def parse(line: String): F[NonEmptyList[T]] = {
+  def parse(line: String): F[NonEmptyList[Node[T]]] = {
     line
       .split(" ")
       .toList
@@ -22,6 +22,10 @@ trait Parser[T, F[_]] {
         NonEmptyList
           .fromList(list)
           .fold(F.raiseError[NonEmptyList[T]](ParserEmptyLine))(_.pure[F])
+          .map {
+            _.zipWithIndex
+              .map { case (value, index) => Node(value, index) }
+          }
       }
   }
 

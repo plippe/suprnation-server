@@ -4,46 +4,58 @@ import cats.{MonadError, Order}
 import cats.implicits._
 import cats.data.NonEmptyList
 
+import com.github.plippe.suprnation.io.Reader
+
 trait SolverError extends Throwable
+case object SolverNoInput extends SolverError
 
 trait Solver[T, F[_]] {
-  def solve(problem: NonEmptyList[String]): F[NonEmptyList[Node[T]]]
+  def solve(): F[NonEmptyList[Node[T]]]
 }
 
 trait TreeSolver[T, V, F[_]] extends Solver[T, F] {
   implicit val F: MonadError[F, Throwable]
   implicit val O: Order[V]
 
+  val reader: Reader[F]
   val parser: Parser[T, F]
   val combiner: Combiner[T, F]
 
   def best(elements: NonEmptyList[Node[T]]): V
 
-  def solve(problem: NonEmptyList[String]): F[NonEmptyList[Node[T]]] = {
+  def solve(): F[NonEmptyList[Node[T]]] = {
     def recursive(solution: List[NonEmptyList[Node[T]]],
-                  head: String,
-                  tail: List[String]): F[List[NonEmptyList[Node[T]]]] = {
+                  line: String): F[List[NonEmptyList[Node[T]]]] = {
       for {
-        elements <- parser.parse(head)
+        elements <- parser.parse(line)
         solutionsPlusOne <- combiner.prepend(solution, elements)
         bestSolutionsPlusOne = solutionsPlusOne
           .groupBy(_.head.index)
           .values
           .map(_.sortBy(best).head)
           .toList
-        bestSolutionsPlusN <- tail match {
-          case head :: tail => recursive(bestSolutionsPlusOne, head, tail)
-          case Nil          => bestSolutionsPlusOne.pure[F]
+        newLine <- reader.readLine()
+        bestSolutionsPlusN <- newLine match {
+          case Some(newLine) => recursive(bestSolutionsPlusOne, newLine)
+          case None          => bestSolutionsPlusOne.pure[F]
         }
       } yield bestSolutionsPlusN
     }
 
-    recursive(List.empty[NonEmptyList[Node[T]]], problem.head, problem.tail)
-      .map(_.sortBy(best).head.reverse)
+    for {
+      line <- reader.readLine()
+      solutions <- line match {
+        case Some(line) => recursive(List.empty[NonEmptyList[Node[T]]], line)
+        case None       => F.raiseError(SolverNoInput)
+      }
+    } yield {
+      solutions.sortBy(best).head.reverse
+    }
   }
 }
 
-class ShortestTreeSolver[T, F[_]](val parser: Parser[T, F],
+class ShortestTreeSolver[T, F[_]](val reader: Reader[F],
+                                  val parser: Parser[T, F],
                                   val combiner: Combiner[T, F])(
     implicit val F: MonadError[F, Throwable],
     implicit val O: Order[T],

@@ -15,19 +15,20 @@ object Main {
 
     val parser = new IntParser[IO]()
     val combiner = new TreeCombiner[Int, IO]()
-    val solver = new ShortestPathSolver[Int, IO](parser, combiner)
+    val solver = new ShortestTreeSolver[Int, IO](parser, combiner)
 
-    val output = { solution: NonEmptyList[Int] =>
-      s"Minimal path is: ${solution.toList.mkString(" + ")} = ${solution.toList.sum}"
+    val output = { solution: NonEmptyList[Node[Int]] =>
+      val ints = solution.map(_.value).toList
+      s"Minimal path is: ${ints.mkString(" + ")} = ${ints.sum}"
     }
 
     build(reader, writer, solver, output).unsafeRunSync
   }
 
-  def build[T, V, F[_]](reader: Reader[F],
-                        writer: Writer[F],
-                        solver: Solver[T, V, F],
-                        output: NonEmptyList[T] => String)(
+  def build[T, F[_]](reader: Reader[F],
+                     writer: Writer[F],
+                     solver: Solver[T, F],
+                     output: NonEmptyList[Node[T]] => String)(
       implicit F: MonadError[F, Throwable]): F[Unit] = {
 
     def readAll(reader: Reader[F],

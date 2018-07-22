@@ -28,7 +28,8 @@ object ParserTests extends TestSuite {
 
     val result = parser.parse("1 2 3")
     assert(result.isRight)
-    assert(result.exists(_ == NonEmptyList.of(0, 0, 0)))
+    assert(
+      result.exists(_ == NonEmptyList.of(Node(0, 0), Node(0, 1), Node(0, 2))))
   }
 
   def parseFailedCast() = {
@@ -48,7 +49,8 @@ object ParserTests extends TestSuite {
     val parser = new IntParser[F]()
     val result = parser.parse("1 2 3")
     assert(result.isRight)
-    assert(result.exists(_ == NonEmptyList.of(1, 2, 3)))
+    assert(
+      result.exists(_ == NonEmptyList.of(Node(1, 0), Node(2, 1), Node(3, 2))))
   }
 
   def castFail() = {

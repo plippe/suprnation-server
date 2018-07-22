@@ -5,21 +5,22 @@ import cats.data.NonEmptyList
 import cats.implicits._
 
 trait CombinerError extends Throwable
-case class NonCombinable[T](lists: List[NonEmptyList[T]],
-                            elements: NonEmptyList[T])
+case class NonCombinable[T](lists: List[NonEmptyList[Node[T]]],
+                            elements: NonEmptyList[Node[T]])
     extends CombinerError
 
 trait Combiner[T, F[_]] {
-  def prepend(lists: List[NonEmptyList[T]],
-              elements: NonEmptyList[T]): F[NonEmptyList[NonEmptyList[T]]]
+  def prepend(
+      lists: List[NonEmptyList[Node[T]]],
+      elements: NonEmptyList[Node[T]]): F[NonEmptyList[NonEmptyList[Node[T]]]]
 }
 
 class TreeCombiner[T, F[_]]()(implicit val F: ApplicativeError[F, Throwable])
     extends Combiner[T, F] {
 
-  override def prepend(
-      lists: List[NonEmptyList[T]],
-      elements: NonEmptyList[T]): F[NonEmptyList[NonEmptyList[T]]] = {
+  override def prepend(lists: List[NonEmptyList[Node[T]]],
+                       elements: NonEmptyList[Node[T]])
+    : F[NonEmptyList[NonEmptyList[Node[T]]]] = {
 
     lists match {
       case _ if lists.size + 1 != elements.size =>

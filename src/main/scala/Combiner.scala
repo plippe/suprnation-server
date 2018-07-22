@@ -23,28 +23,28 @@ class TreeCombiner[T, F[_]]()(implicit val F: ApplicativeError[F, Throwable])
     : F[NonEmptyList[NonEmptyList[Node[T]]]] = {
 
     lists match {
-      case _ if lists.size + 1 != elements.size =>
-        F.raiseError(NonCombinable(lists, elements))
       case Nil => NonEmptyList.of(elements).pure[F]
       case _ =>
-        val leftRightElements = elements.toList
-          .sliding(2)
-          .toList
-          .collect {
-            case left :: right :: Nil => (left, right)
-          }
+        val prependedLists = lists.flatMap { list =>
+          val left = elements.find(_.index == list.head.index)
+          val right = elements.find(_.index == list.head.index + 1)
 
-        val prependedLists = lists
-          .zip(leftRightElements)
-          .flatMap {
-            case (list, (left, right)) =>
+          (left, right) match {
+            case (Some(left), Some(right)) =>
               List(
                 list.prepend(left),
                 list.prepend(right),
               )
-          }
 
-        NonEmptyList.fromListUnsafe(prependedLists).pure[F]
+            case _ => List()
+          }
+        }
+
+        if (prependedLists.size == lists.size * 2) {
+          NonEmptyList.fromListUnsafe(prependedLists).pure[F]
+        } else {
+          F.raiseError(NonCombinable(lists, elements))
+        }
     }
 
   }

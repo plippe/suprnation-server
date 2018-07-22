@@ -16,7 +16,7 @@ trait Solver[T, V, F[_]] {
 
   def best(elements: NonEmptyList[T]): V
 
-  def solve(problem: NonEmptyList[String]): F[List[NonEmptyList[T]]] = {
+  def solve(problem: NonEmptyList[String]): F[NonEmptyList[T]] = {
     def recursive(solution: List[NonEmptyList[T]],
                   head: String,
                   tail: List[String]): F[List[NonEmptyList[T]]] = {
@@ -36,6 +36,7 @@ trait Solver[T, V, F[_]] {
     }
 
     recursive(List.empty[NonEmptyList[T]], problem.head, problem.tail)
+      .map(_.sortBy(best).head.reverse)
   }
 }
 

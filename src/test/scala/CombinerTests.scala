@@ -6,7 +6,7 @@ import utest._
 
 object CombinerTests extends TestSuite {
 
-  type F[T] = Either[CombinerError, T]
+  type F[T] = Either[Throwable, T]
 
   val tests = Tests {
     "treeCombiner" - {

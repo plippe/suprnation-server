@@ -6,7 +6,7 @@ import utest._
 
 object ParserTests extends TestSuite {
 
-  type F[T] = Either[ParserError, T]
+  type F[T] = Either[Throwable, T]
 
   val tests = Tests {
     "parser" - {
@@ -22,7 +22,7 @@ object ParserTests extends TestSuite {
   def parseCasted() = {
     val parser = new Parser[Int, F] {
       implicit val F =
-        cats.instances.either.catsStdInstancesForEither[ParserError]
+        cats.instances.either.catsStdInstancesForEither[Throwable]
       def cast(str: String) = Right(0)
     }
 
@@ -32,10 +32,10 @@ object ParserTests extends TestSuite {
   }
 
   def parseFailedCast() = {
-    case object MyParserValidation extends ParserError
+    case object MyParserValidation extends Throwable
     val parser = new Parser[Int, F] {
       implicit val F =
-        cats.instances.either.catsStdInstancesForEither[ParserError]
+        cats.instances.either.catsStdInstancesForEither[Throwable]
       def cast(str: String) = Left(MyParserValidation)
     }
 

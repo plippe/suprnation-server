@@ -14,8 +14,7 @@ trait Combiner[T, F[_]] {
               elements: NonEmptyList[T]): F[NonEmptyList[NonEmptyList[T]]]
 }
 
-class TreeCombiner[T, F[_]]()(
-    implicit val F: ApplicativeError[F, CombinerError])
+class TreeCombiner[T, F[_]]()(implicit val F: ApplicativeError[F, Throwable])
     extends Combiner[T, F] {
 
   override def prepend(

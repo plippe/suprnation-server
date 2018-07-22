@@ -9,7 +9,7 @@ case object ParserEmptyLine extends ParserError
 case class ParserCastError(e: Throwable) extends ParserError
 
 trait Parser[T, F[_]] {
-  implicit val F: MonadError[F, ParserError]
+  implicit val F: MonadError[F, Throwable]
 
   def cast(str: String): F[T]
 
@@ -27,7 +27,7 @@ trait Parser[T, F[_]] {
 
 }
 
-class IntParser[F[_]]()(implicit val F: MonadError[F, ParserError])
+class IntParser[F[_]]()(implicit val F: MonadError[F, Throwable])
     extends Parser[Int, F] {
 
   override def cast(str: String): F[Int] = {

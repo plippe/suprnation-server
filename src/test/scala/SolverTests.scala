@@ -19,7 +19,6 @@ object SolverTests extends TestSuite {
     }
     "ShortestTreeSolver" - {
       "best" - { shortestSolverBest() }
-      "solve given example" - { solveExample() }
     }
   }
 
@@ -120,23 +119,5 @@ object SolverTests extends TestSuite {
     val result =
       solver.best(NonEmptyList.fromListUnsafe(List.fill(5)(Node(1, 0))))
     assert(result == 5)
-  }
-
-  def solveExample() = {
-    val parser = new IntParser[F]()
-    val combiner = new TreeCombiner[Int, F]()
-    val solver = new ShortestTreeSolver[Int, F](parser, combiner)
-
-    val result = solver.solve(
-      NonEmptyList.of(
-        "7",
-        "6 3",
-        "3 8 5",
-        "11 2 10 9",
-      ))
-    assert(result.isRight)
-    assert(
-      result.exists(
-        _ == NonEmptyList.of(Node(7, 0), Node(6, 0), Node(3, 0), Node(2, 1))))
   }
 }
